@@ -13,6 +13,8 @@ services:
         groupid: ${groupid}
     networks:
       - internal
+    ports:
+      - ${INET_HTTP_SERVER_PORT}:${INET_HTTP_SERVER_PORT}
     env_file: .env
     restart: unless-stopped
     volumes:
@@ -23,6 +25,7 @@ services:
   # RabbitMQ Service
   rabbitmq:
     image: "rabbitmq:3-management-alpine"
+    container_name: delivery-manager-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
