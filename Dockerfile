@@ -3,11 +3,10 @@ FROM ubuntu:22.04
 LABEL maintainer="tannous.geagea@wasteant.com"
 LABEL com.wasteant.version="1.1b1"
 
-ENV user=appuser
-ARG user=appuser
-ARG userid=1000
-ARG group=appuser
-ARG groupid=1000
+ARG user
+ARG userid
+ARG group
+ARG groupid
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -q -y --no-install-recommends \
     apt-utils \

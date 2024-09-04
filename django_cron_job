@@ -1,0 +1,2 @@
+# Run the management command daily at midnight (0 0 * * *)
+# 0 0 * * * cd /home/appuser/src/switch && python3 manage.py delete >> /var/log/django_cron_job.log

@@ -6,6 +6,11 @@ services:
     container_name: delivery-manager-core
     build:
       context: .
+      args:
+        user: ${user}
+        userid: ${userid}
+        group: ${group}
+        groupid: ${groupid}
     networks:
       - internal
     env_file: .env
