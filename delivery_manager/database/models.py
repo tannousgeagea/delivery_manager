@@ -1,5 +1,34 @@
 from django.db import models
 
+class PlantInfo(models.Model):
+    """
+    Represent information about the plant
+    
+    Attributes:
+        - plant_id (CharField): a string field to store the id of the plant
+        - plant_name (CharField): a string field to store the name of the plant
+        - plant_location (CharField): a string field to the location of the plant
+        - description (CharField): a string field to provide description on the plant
+        - meta_info (JSONField): a json field for additional info
+    """
+    plant_id = models.CharField(max_length=255)
+    plant_name = models.CharField(max_length=255)
+    plant_location = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    meta_info = models.JSONField(null=True, blank=True)
+    
+    class Meta:
+        db_table = "plant_info"
+        verbose_name_plural = 'Plant Info'
+        indexes = [
+            models.Index(fields=['plant_name', 'plant_location']),
+        ]
+        unique_together = ('plant_name', 'plant_location')
+
+    def __str__(self,):
+        return f"{self.plant_name} in {self.plant_location}"
+
 # Create your models here.
 class EntityType(models.Model):
     """
@@ -12,6 +41,7 @@ class EntityType(models.Model):
     The Meta class defines the database table name 'entity_type' and sets a verbose name in plural form 'Entity Types'.
     The __str__ method returns the string representation of the entity type, making it more readable and identifiable in admin interfaces or when queried.
     """
+    plant = models.ForeignKey(PlantInfo, on_delete=models.CASCADE)
     entity_type = models.CharField(max_length=250)
     created_at = models.DateTimeField(auto_now_add=True)
     meta_info = models.JSONField(null=True, blank=True)
@@ -52,7 +82,7 @@ class PlantEntity(models.Model):
     def __str__(self):
         return f'{self.entity_type}, {self.entity_uid}'
     
-class Event(models.Model):
+class DeliveryEvent(models.Model):
 
     """
     Represents an event within the application. This model is used to log and manage events, providing insights into the source, cause, and detailed description of each event.
@@ -69,19 +99,28 @@ class Event(models.Model):
     """
 
     event_id = models.CharField(max_length=250)
+    event_name = models.CharField(max_length=255)
+    event_location = models.ForeignKey(PlantEntity, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    event_source = models.CharField(max_length=250)
-    event_cause = models.CharField(max_length=250)
-    description = models.CharField(max_length=250)
+    event_timestamp = models.DateTimeField()
+    status = models.CharField(max_length=255)
+    description = models.CharField(max_length=250, null=True, blank=True)
     meta_info = models.JSONField(null=True, blank=True)
 
 
     class Meta:
-        db_table = "events"
-        verbose_name_plural = "Events"
+        db_table = "delivery_event"
+        verbose_name_plural = "Delivery Events"
+        indexes = [
+            models.Index(
+                fields=["event_location", "event_timestamp"]),
+            models.Index(
+                fields=["status", "event_timestamp", "event_location"],
+            )
+        ]
 
     def __str__(self):
-        return f"{self.event_id}, {self.event_source}, {self.event_cause}, {self.description}"
+        return f"{self.event_name} at {self.event_location} at {self.event_timestamp}"
     
     
 class DeliveryState(models.Model):
@@ -90,8 +129,8 @@ class DeliveryState(models.Model):
     delivery_start = models.DateTimeField()
     delivery_end = models.DateTimeField(null=True)
     delivery_status = models.CharField(max_length=255, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
     delivery_location = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
     meta_info = models.JSONField(null=True, blank=True)
     
     class Meta:
@@ -99,7 +138,93 @@ class DeliveryState(models.Model):
         verbose_name_plural = 'Delivery State'
     
     def __str__(self):
-        return f'{self.entity}, {self.delivery_id}'
+        return f'Delivery at {self.delivery_location} at {self.created_at}'
     
+class Metadata(models.Model):
+    """
+    Represents general metadata information.
     
+    Attributes:
+        - primary_key (CharField): The primary key column name.
+    """
+    primary_key = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'metadata'
+        verbose_name_plural = 'Metadata'
+
+    def __str__(self):
+        return f"Metadata with primary key: {self.primary_key}"
     
+class MetadataColumn(models.Model):
+    """
+    Represents a metadata column.
+    
+    Attributes:
+        - metadata (ForeignKey): A reference to the Metadata object.
+        - column_name (CharField): The internal name of the column.
+        - type (CharField): The data type of the column (e.g., "string").
+    """
+    metadata = models.ForeignKey(Metadata, on_delete=models.CASCADE, related_name='columns')
+    column_name = models.CharField(max_length=255)
+    type = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'metadata_column'
+        verbose_name_plural = 'Metadata Columns'
+        unique_together = ('metadata', 'column_name')  # Ensure unique columns per metadata entry
+        indexes = [
+            models.Index(fields=['metadata', 'column_name']),
+        ]
+
+    def __str__(self):
+        return f"Column: {self.column_name} (Type: {self.type})"
+
+class MetadataLocalization(models.Model):
+    """
+    Represents localized metadata for columns.
+    
+    Attributes:
+        - metadata_column (ForeignKey): A reference to the MetadataColumn object.
+        - language (CharField): The language code (e.g., "en", "de").
+        - title (CharField): Localized title of the column.
+        - description (TextField): Localized description of the column.
+    """
+    metadata_column = models.ForeignKey(MetadataColumn, on_delete=models.CASCADE, related_name='localizations')
+    language = models.CharField(max_length=10)  # ISO 639-1 codes, e.g., "en", "de"
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+
+    class Meta:
+        db_table = 'metadata_localization'
+        verbose_name_plural = 'Metadata Localizations'
+        unique_together = ('metadata_column', 'language')  # Ensure unique localization per column-language pair
+        indexes = [
+            models.Index(fields=['metadata_column', 'language']),
+        ]
+
+    def __str__(self):
+        return f"Localization for '{self.metadata_column.column_name}' in {self.language}"
+
+class MetadataFlags(models.Model):
+    """
+    Represents flags associated with metadata columns.
+    
+    Attributes:
+        - metadata (ForeignKey): A reference to the Metadata object.
+        - column_name (CharField): The name of the column to be flagged.
+    """
+    metadata = models.ForeignKey(Metadata, on_delete=models.CASCADE, related_name='flags')
+    column_name = models.CharField(max_length=255)
+    description = models.TextField(null=True)
+
+    class Meta:
+        db_table = 'metadata_flags'
+        verbose_name_plural = 'Metadata Flags'
+        unique_together = ('metadata', 'column_name')  # Ensure unique flags per metadata entry
+        indexes = [
+            models.Index(fields=['metadata', 'column_name']),
+        ]
+
+    def __str__(self):
+        return f"Flag for column: {self.column_name} in Metadata ID {self.metadata.id}"

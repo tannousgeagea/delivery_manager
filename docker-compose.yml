@@ -15,6 +15,10 @@ services:
       - internal
     ports:
       - ${INET_HTTP_SERVER_PORT}:${INET_HTTP_SERVER_PORT}
+      - ${DJANGO_SERVER_PORT}:${DJANGO_SERVER_PORT}
+      - ${DATA_API_PORT}:${DATA_API_PORT}
+      - ${EVENT_API_PORT}:${EVENT_API_PORT}
+      - ${FLOWER_PORT}:${FLOWER_PORT}
     env_file: .env
     restart: unless-stopped
     volumes:
