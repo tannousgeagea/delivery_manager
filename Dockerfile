@@ -71,6 +71,7 @@ RUN chmod 0644 /etc/cron.d/django_cron_job
 RUN crontab /etc/cron.d/django_cron_job
 RUN service cron start
 
+COPY . /home/$user/src/
 COPY ./supervisord.conf /etc/supervisord.conf
 COPY ./entrypoint.sh /home/
 RUN /bin/bash -c "chown -R $user:$user /home/"

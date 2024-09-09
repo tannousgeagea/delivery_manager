@@ -21,9 +21,9 @@ services:
       - ${FLOWER_PORT}:${FLOWER_PORT}
     env_file: .env
     restart: unless-stopped
-    volumes:
-      - .:/home/$user/src
-      - /media/wasteantadmin/production-data/analytics/alarms/delivery:/media/alarms/delivery
+    # volumes:
+    #   - .:/home/$user/src
+    #   - /media/wasteantadmin/production-data/analytics/alarms/delivery:/media/alarms/delivery
     user: ${user}
 
   # RabbitMQ Service
@@ -34,8 +34,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - .docker-conf/rabbitmq/data/:/var/lib/rabbitmq
-      - .docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
       - internal
     restart: unless-stopped
