@@ -44,7 +44,25 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
+  postgres:
+    image: wadockerregistry.azurecr.io/postgres:dev
+    container_name: delivery-manager-postgres
+    restart: "always"
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: wasteantadmin@2024
+      POSTGRES_DB: delivery
+    networks:
+     - internal
+    ports:
+      - "5130:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
 networks:
   internal:
     name: internal
     driver: bridge 
+
+volumes:
+  postgres_data:
