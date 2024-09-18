@@ -24,14 +24,3 @@ class Command(BaseCommand):
             # Fall back to Django's default createsuperuser behavior
             call_command('createsuperuser', interactive=True)
 
-class Command(BaseCommand):
-    help = 'Create a superuser, optionally automated'
-
-
-
-    def handle(self, *args, **options):
-        username = options.get('username')
-        email = options.get('email')
-        password = options.get('password')
-
-        # Check if all arguments are provided

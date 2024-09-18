@@ -45,7 +45,7 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
 
   postgres:
-    image: wadockerregistry.azurecr.io/postgres:dev
+    image: postgres:latest
     container_name: delivery-manager-postgres
     restart: "always"
     environment:
