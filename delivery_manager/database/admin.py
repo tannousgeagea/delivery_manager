@@ -2,6 +2,11 @@ from django.contrib import admin
 from .models import PlantInfo, EntityType, PlantEntity, DeliveryEvent, DeliveryState
 from .models import Metadata, MetadataColumn, MetadataLocalization, MetadataFlags
 
+admin.site.site_header = "Delivery Manager"
+admin.site.site_title = "Delivery Manager"
+admin.site.index_title = "Welcome to Delivery Manager Dashboard Portal"
+
+
 @admin.register(PlantInfo)
 class PlantInfoAdmin(admin.ModelAdmin):
     """
