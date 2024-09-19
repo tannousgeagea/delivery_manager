@@ -48,10 +48,7 @@ services:
     image: postgres:latest
     container_name: delivery-manager-postgres
     restart: "always"
-    environment:
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: wasteantadmin@2024
-      POSTGRES_DB: delivery
+    env_file: .env
     networks:
      - internal
     ports:
