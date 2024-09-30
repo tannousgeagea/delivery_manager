@@ -16,7 +16,7 @@ from fastapi.routing import APIRoute
 from fastapi import status
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from database.models import MetadataColumn, Metadata
+from metadata.models import MetadataColumn, Metadata
 from database.models import PlantEntity, DeliveryState
 
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
