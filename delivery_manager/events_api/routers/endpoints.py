@@ -77,7 +77,7 @@ async def create_delivery(
     x_request_id: Annotated[str | None, Header()] = None,
 ) -> dict:
     
-    task = log_delivery.create_delivery.apply_async(kwargs=event.dict(), task_id=x_request_id)
+    task = log_delivery.create_delivery.apply_async(args=(event,), task_id=x_request_id)
     result = {"status": "received", "task_id": task.id, "data": {}}
 
     return result

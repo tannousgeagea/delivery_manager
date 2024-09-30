@@ -13,6 +13,7 @@ services:
         groupid: ${groupid}
     networks:
       - internal
+      - media_manager_internal
     ports:
       - ${INET_HTTP_SERVER_PORT}:${INET_HTTP_SERVER_PORT}
       - ${DJANGO_SERVER_PORT}:${DJANGO_SERVER_PORT}
@@ -21,8 +22,8 @@ services:
       - ${FLOWER_PORT}:${FLOWER_PORT}
     env_file: .env
     restart: unless-stopped
-    # volumes:
-    #   - .:/home/$user/src
+    volumes:
+      - .:/home/$user/src
     #   - /media/wasteantadmin/production-data/analytics/alarms/delivery:/media/alarms/delivery
     user: ${user}
 
@@ -31,7 +32,6 @@ services:
     image: "rabbitmq:3-management-alpine"
     container_name: delivery-manager-rabbitmq
     ports:
-      - "5672:5672"
       - "15672:15672"
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq
@@ -58,7 +58,9 @@ services:
 
 networks:
   internal:
-    driver: bridge 
+    driver: bridge
+  media_manager_internal:
+    external: true
 
 volumes:
   postgres_data:
