@@ -40,7 +40,7 @@ class NoTruck(State):
         :param event: The event to process
         :return: The next state
         """
-        if event == 'truck':
+        if event == 'Truck':
             return Truck()
         return self
     
@@ -62,7 +62,7 @@ class Truck(State):
         :param event: The event to process
         :return: The next state
         """
-        if event == 'no-truck':
+        if event == 'NoTruck':
             return NoTruck()
         return self
     
