@@ -525,7 +525,7 @@ def get_delivery_assets(response: Response, delivery_id:str):
 @router.api_route(
     "/gate/{gate_id}", methods=["GET"], tags=["Delivery"], description=description,
 )
-def get_gate_status(response: Response, gate_id:str):
+def get_gate_status(response: Response, gate_id:str, timestamp:datetime, diff:float=60):
     results = {}
     
     try:
@@ -552,21 +552,41 @@ def get_gate_status(response: Response, gate_id:str):
         if not DeliveryState.objects.filter(entity=plant_entity).exists():
             results['error'] = {
                 'status_code': "Not-Found",
-                'status_description': f"delivery_id {gate_id} is not found",
-                'detail': 'please provide a valid delivery_id'
+                'status_description': f"delivery_id for {gate_id} is not found",
+                'detail': f'No delivery has been registered for {gate_id} yet'
             }
             response.status_code = status.HTTP_404_NOT_FOUND
             return results
             
             
-        # if isinstance(timestamp, str):
-        #     timestamp = datetime.strptime(timestamp, DATETIME_FORMAT).replace(tzinfo=timezone.utc)
-            
         delivery = DeliveryState.objects.filter(entity=plant_entity).last()
-        delivery_end = datetime.now()
-        if delivery.delivery_status == 'done':
-            delivery_end = delivery.delivery_end
+        delivery_end = datetime.now(tz=timezone.utc)
+        if delivery.delivery_status == 'on-going':
+            results = {
+                'delivery_id': delivery.id,
+                'delivery_uid': delivery.delivery_id,
+                'delivery_location': gate_id,
+                'delivery_start': delivery.delivery_start.strftime(DATETIME_FORMAT),
+                'delivery_end': delivery_end.strftime(DATETIME_FORMAT),
+                'delivery_status': delivery.delivery_status, 
+                'gate_status': 'Anlieferung im Bearbeitung' if  delivery.delivery_status != 'done' else 'Keine Anlieferung',
+                'videos_dir': delivery.meta_info.get('videos', '') if delivery.meta_info is not None else '',
+                'snapshots_dir': delivery.meta_info.get('snapshots', '') if delivery.meta_info is not None else '',
+            } 
             
+            return results
+
+
+        if (timestamp.replace(tzinfo=timezone.utc) - delivery.delivery_end).seconds > diff:
+            results = {
+                "delivery_id": None,
+                "delivery_end": delivery.delivery_end.strftime(DATETIME_FORMAT),
+                "timestamp": timestamp.strftime(DATETIME_FORMAT),
+                "diff": (timestamp.replace(tzinfo=timezone.utc) - delivery.delivery_end).seconds
+            }
+            
+            return results
+        
         results = {
             'delivery_id': delivery.id,
             'delivery_uid': delivery.delivery_id,

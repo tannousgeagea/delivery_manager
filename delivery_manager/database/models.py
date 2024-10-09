@@ -124,11 +124,18 @@ class DeliveryEvent(models.Model):
     
     
 class DeliveryState(models.Model):
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('on-going', 'Active'),
+        ('done', 'Done'),
+    ]
+    
     entity = models.ForeignKey(PlantEntity, on_delete=models.CASCADE)
     delivery_id = models.CharField(max_length=255, unique=True)
     delivery_start = models.DateTimeField()
     delivery_end = models.DateTimeField(null=True)
-    delivery_status = models.CharField(max_length=255, default='pending')
+    delivery_status = models.CharField(max_length=255, default='pending', choices=STATUS_CHOICES)
     delivery_location = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     meta_info = models.JSONField(null=True, blank=True)
