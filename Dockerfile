@@ -73,6 +73,10 @@ RUN service cron start
 
 COPY . /home/$user/src/
 COPY ./supervisord.conf /etc/supervisord.conf
+COPY ./prefix-output.sh /prefix-output.sh
+RUN /bin/bash -c "chmod +x /prefix-output.sh"
+
+
 COPY ./entrypoint.sh /home/
 RUN /bin/bash -c "chown -R $user:$user /home/"
 ENTRYPOINT /bin/bash -c ". /home/entrypoint.sh"

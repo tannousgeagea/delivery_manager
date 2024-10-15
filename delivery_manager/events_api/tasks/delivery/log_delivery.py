@@ -7,10 +7,15 @@ from datetime import datetime, timezone
 django.setup()
 from utils.state import StateMachine
 from utils.media import request_video
+from utils.api.base import BaseAPI
 from database.models import PlantInfo, PlantEntity, DeliveryEvent, DeliveryState
 
 fsm = StateMachine()
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+topics = os.getenv('topics', "/top/rgb_left")
+MediaManager_API = os.getenv('MEDIA_MANAGER_API', "MediaManager_core")
+
+base_api = BaseAPI()
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5},
              name='delivery:create_delivery')
@@ -49,7 +54,7 @@ def create_delivery(self, event, **kwargs):
             'event_name': event.event_name,
             'event_type': 'start',
             'timestamp': dt,
-            'topics': '/sensor_raw/rgbmatrix_02/image_raw'
+            'topics': topics,
         }
         
         if str(fsm) == 'truck' and delivery_status == 'done':
@@ -68,13 +73,15 @@ def create_delivery(self, event, **kwargs):
                 {
                     "event_type": "start",
                     "event_description": msg,
+                    "event_id": delivery_state.delivery_id,
                 }
             )
+
             
             request_video.send_request(
-                url="http://media-manager:18042/api/v1/event/rt_video/start",
+                url=f"http://{MediaManager_API}:18042/api/v1/event/rt_video/start",
                 params=params,
-            )        
+            )      
                 
         if str(fsm)=='no-truck':
             delivery_end = datetime.now(tz=timezone.utc)
@@ -90,13 +97,30 @@ def create_delivery(self, event, **kwargs):
                     {
                         "event_type": "stop",
                         "event_description": msg,
+                        "event_id": delivery_state.delivery_id,
                     }
                 )
                 
                 request_video.send_request(
-                    url="http://media-manager:18042/api/v1/event/rt_video/stop",
+                    url=f"http://{MediaManager_API}:18042/api/v1/event/rt_video/stop",
                     params=params,
                 ) 
+        
+                base_api.post(
+                    url=f"http://{os.getenv('EDGE_CLOUD_SYNC_HOST', '0.0.0.0')}:{os.getenv('EDGE_CLOUD_SYNC_PORT', '27092')}/api/v1/data",
+                    payload={
+                        'event_id': delivery_state.delivery_id,
+                        "source_id": "delivery_manager",
+                        "target": "delivery",
+                        "data": {
+                            "tenant_domain": "amk.wasteant.com",
+                            "delivery_id": delivery_state.delivery_id,
+                            "location": delivery_state.delivery_location,
+                            "delivery_start": delivery_state.delivery_start.strftime(DATETIME_FORMAT),
+                            "delivery_end": delivery_state.delivery_end.strftime(DATETIME_FORMAT),
+                        }
+                    }
+                )
         
         data.update(
             {
