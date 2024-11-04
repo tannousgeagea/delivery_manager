@@ -20,6 +20,8 @@ MediaManager_API = os.getenv('MEDIA_MANAGER_API', "MediaManager_core")
 base_api = BaseAPI()
 keep_track_of_time = KeepTrackOfTime()
 
+store_image = os.getenv('STORE_IMAGE', False)
+
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5},
              name='delivery:create_delivery')
 def create_delivery(self, event, **kwargs):
@@ -61,7 +63,7 @@ def create_delivery(self, event, **kwargs):
             'topics': topics,
         }
         
-        if str(fsm) == 'truck' and delivery_status == 'done':
+        if str(fsm) == 'Truck' and delivery_status == 'done':
             delivery_start = datetime.now(tz=timezone.utc)
             delivery_state = DeliveryState()
             delivery_state.delivery_start = delivery_start
@@ -87,7 +89,7 @@ def create_delivery(self, event, **kwargs):
                 params=params,
             )      
                 
-        if str(fsm)=='no-truck':
+        if str(fsm)=='NoTruck':
             delivery_end = datetime.now(tz=timezone.utc)
             delivery_state = last_delivery
             
@@ -149,10 +151,11 @@ def create_delivery(self, event, **kwargs):
                 "topic": topics.split(',')[0]
                 }
             
-            request_image.send_request(
-                url=f"http://{MediaManager_API}:18042/api/v1/event/image",
-                params=params
-            )
+            if store_image:
+                request_image.send_request(
+                    url=f"http://{MediaManager_API}:18042/api/v1/event/image",
+                    params=params
+                )
             
             keep_track_of_time.update_time()
         

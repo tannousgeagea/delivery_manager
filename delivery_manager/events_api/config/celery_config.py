@@ -10,9 +10,11 @@ def route_task(name, args, kwargs, options, task=None, **kw):
         return {"queue": queue}
     return {"queue": "celery"}
 
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
+RABBITMQ_PORT = os.getenv('RABBITMQ_PORT', '5672')
 
 class BaseConfig:
-    CELERY_BROKER_URL: str = os.environ.get(f"CELERY_BROKER_URL", f"amqp://guest:guest@rabbitmq:{os.environ.get('RABBITMQ_PORT', '5672')}//")
+    CELERY_BROKER_URL: str = os.environ.get(f"CELERY_BROKER_URL", f"amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//")
     CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", "rpc://")
 
     CELERY_TASK_QUEUES: list = (

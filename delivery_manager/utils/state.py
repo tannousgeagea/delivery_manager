@@ -45,7 +45,7 @@ class NoTruck(State):
         return self
     
     def __str__(self):
-        return 'no-truck'
+        return 'NoTruck'
     
 
 class Truck(State):
@@ -67,7 +67,7 @@ class Truck(State):
         return self
     
     def __str__(self):
-        return 'truck'
+        return 'Truck'
     
 class StateMachine:
     def __init__(self):
