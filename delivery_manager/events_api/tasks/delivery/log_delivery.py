@@ -88,6 +88,22 @@ def create_delivery(self, event, **kwargs):
                 url=f"http://{MediaManager_API}:18042/api/v1/event/rt_video/start",
                 params=params,
             )      
+
+            base_api.post(
+                url=f"http://{os.getenv('EDGE_CLOUD_SYNC_HOST', '0.0.0.0')}:{os.getenv('EDGE_CLOUD_SYNC_PORT', '27092')}/api/v1/data",
+                payload={
+                    'event_id': delivery_state.delivery_id,
+                    "source_id": "delivery_manager",
+                    "target": "delivery",
+                    "data": {
+                        "tenant_domain": "amk.wasteant.com",
+                        "delivery_id": delivery_state.delivery_id,
+                        "location": delivery_state.delivery_location,
+                        "delivery_start": delivery_state.delivery_start.strftime(DATETIME_FORMAT),
+                        "delivery_end": datetime.now(tz=timezone.utc).strftime(DATETIME_FORMAT),
+                    }
+                }
+            )
                 
         if str(fsm)=='NoTruck':
             delivery_end = datetime.now(tz=timezone.utc)
