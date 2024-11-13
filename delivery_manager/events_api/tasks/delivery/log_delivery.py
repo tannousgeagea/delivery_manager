@@ -17,6 +17,9 @@ DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 topics = os.getenv('topics', "/top/rgb_left")
 MediaManager_API = os.getenv('MEDIA_MANAGER_API', "MediaManager_core")
 
+EXTERNAL_TOPICS = os.getenv('EXTERNAL_TOPICS')
+EXTERNAL_MEDIA_MANAGER_API_ROUTE = os.getenv('EXTERNAL_MEDIA_MANAGER_API_ROUTE')
+
 base_api = BaseAPI()
 keep_track_of_time = KeepTrackOfTime()
 
@@ -42,6 +45,7 @@ def create_delivery(self, event, **kwargs):
             return data
         
         plant_entity = PlantEntity.objects.get(entity_uid=event.location)
+        tenant_domain = plant_entity.entity_type.plant.domain
         last_delivery = DeliveryState.objects.filter(entity=plant_entity).order_by('-created_at').first()
         
         fsm.on_event(event=event.status)
@@ -62,6 +66,16 @@ def create_delivery(self, event, **kwargs):
             'timestamp': dt,
             'topics': topics,
         }
+        
+        if EXTERNAL_TOPICS and EXTERNAL_MEDIA_MANAGER_API_ROUTE:
+            b_params = {
+                'gate_id': event.location,
+                'event_id': event.event_uid,
+                'event_name': event.event_name,
+                'event_type': 'start',
+                'timestamp': dt,
+                'topics': EXTERNAL_TOPICS,
+            }
         
         if str(fsm) == 'Truck' and delivery_status == 'done':
             delivery_start = datetime.now(tz=timezone.utc)
@@ -89,6 +103,21 @@ def create_delivery(self, event, **kwargs):
                 params=params,
             )      
 
+            if EXTERNAL_TOPICS and EXTERNAL_MEDIA_MANAGER_API_ROUTE:
+                b_params.update(
+                    {
+                        "event_type": "start",
+                        "event_description": msg,
+                        "event_id": delivery_state.delivery_id,
+                    }
+                )
+
+                request_video.send_request(
+                    url=f"{EXTERNAL_MEDIA_MANAGER_API_ROUTE}/api/v1/event/rt_video/start",
+                    params=b_params,
+                )
+
+
             base_api.post(
                 url=f"http://{os.getenv('EDGE_CLOUD_SYNC_HOST', '0.0.0.0')}:{os.getenv('EDGE_CLOUD_SYNC_PORT', '27092')}/api/v1/data",
                 payload={
@@ -96,7 +125,7 @@ def create_delivery(self, event, **kwargs):
                     "source_id": "delivery_manager",
                     "target": "delivery",
                     "data": {
-                        "tenant_domain": "amk.wasteant.com",
+                        "tenant_domain": tenant_domain,
                         "delivery_id": delivery_state.delivery_id,
                         "location": delivery_state.delivery_location,
                         "delivery_start": delivery_state.delivery_start.strftime(DATETIME_FORMAT),
@@ -128,6 +157,20 @@ def create_delivery(self, event, **kwargs):
                     params=params,
                 ) 
         
+                if EXTERNAL_TOPICS and EXTERNAL_MEDIA_MANAGER_API_ROUTE:
+                    b_params.update(
+                        {
+                            "event_type": "stop",
+                            "event_description": msg,
+                            "event_id": delivery_state.delivery_id,
+                        }
+                    )
+
+                    request_video.send_request(
+                        url=f"{EXTERNAL_MEDIA_MANAGER_API_ROUTE}/api/v1/event/rt_video/stop",
+                        params=b_params,
+                    )
+        
                 base_api.post(
                     url=f"http://{os.getenv('EDGE_CLOUD_SYNC_HOST', '0.0.0.0')}:{os.getenv('EDGE_CLOUD_SYNC_PORT', '27092')}/api/v1/data",
                     payload={
@@ -135,7 +178,7 @@ def create_delivery(self, event, **kwargs):
                         "source_id": "delivery_manager",
                         "target": "delivery",
                         "data": {
-                            "tenant_domain": "amk.wasteant.com",
+                            "tenant_domain": tenant_domain,
                             "delivery_id": delivery_state.delivery_id,
                             "location": delivery_state.delivery_location,
                             "delivery_start": delivery_state.delivery_start.strftime(DATETIME_FORMAT),
