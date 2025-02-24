@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PlantInfo, EntityType, PlantEntity, DeliveryEvent, DeliveryState
+from .models import PlantInfo, EntityType, PlantEntity, DeliveryEvent, DeliveryState, Camera
 
 admin.site.site_header = "Delivery Manager"
 admin.site.site_title = "Delivery Manager"
@@ -38,6 +38,12 @@ class PlantEntityAdmin(admin.ModelAdmin):
     list_filter = ('entity_type', 'created_At')  # Add filters for entity type and creation date
     ordering = ('-created_At',)  # Order by creation date, newest first
     readonly_fields = ('created_At',)  # Make created_At field read-only
+
+@admin.register(Camera)
+class CameraAdmin(admin.ModelAdmin):
+    list_display = ('camera_id', 'plant_entity', 'stream_topic', 'location')
+    search_fields = ('camera_id', 'plant_entity__plant_name', 'stream_topic', 'location')
+    list_filter = ('plant_entity',)
 
 @admin.register(DeliveryEvent)
 class DeliveryEventAdmin(admin.ModelAdmin):

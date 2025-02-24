@@ -83,6 +83,31 @@ class PlantEntity(models.Model):
     def __str__(self):
         return f'{self.entity_type}, {self.entity_uid}'
     
+class Camera(models.Model):
+    """
+    Represents a camera associated with a plant entity. 
+    Each camera provides a video stream identified by a unique stream topic.
+    
+    Attributes:
+        - camera_id (CharField): A unique identifier for the camera.
+        - plant_entity (ForeignKey): The plant entity being monitored by this camera.
+        - stream_topic (CharField): The topic/identifier for the camera's video stream.
+        - location (CharField): The physical or logical location of the camera.
+        - meta_info (JSONField): Additional metadata related to the camera.
+    """
+    camera_id = models.CharField(max_length=255, unique=True)
+    plant_entity = models.ForeignKey(PlantEntity, on_delete=models.CASCADE, related_name='cameras')
+    stream_topic = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    meta_info = models.JSONField(null=True, blank=True)
+    
+    class Meta:
+        db_table = "camera"
+        verbose_name_plural = "Cameras"
+    
+    def __str__(self):
+        return f"Camera {self.camera_id} for {self.plant_entity}"
+
 class DeliveryEvent(models.Model):
 
     """

@@ -10,7 +10,7 @@ from utils.state import StateMachine
 from utils.time.time_tracker import KeepTrackOfTime
 from utils.media import request_video, request_image
 from utils.api.base import BaseAPI
-from database.models import PlantInfo, PlantEntity, DeliveryEvent, DeliveryState
+from database.models import PlantInfo, PlantEntity, Camera, DeliveryEvent, DeliveryState
 
 fsm = StateMachine()
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -46,6 +46,7 @@ def create_delivery(self, event, **kwargs):
         
         plant_entity = PlantEntity.objects.get(entity_uid=event.location)
         tenant_domain = plant_entity.entity_type.plant.domain
+        topics = list(plant_entity.cameras.values_list('stream_topic', flat=True))
         last_delivery = DeliveryState.objects.filter(entity=plant_entity).order_by('-created_at').first()
         
         fsm.on_event(event=event.status)
@@ -64,7 +65,7 @@ def create_delivery(self, event, **kwargs):
             'event_name': event.event_name,
             'event_type': 'start',
             'timestamp': dt,
-            'topics': topics,
+            'topics': ",".join(topics),
         }
         
         if EXTERNAL_TOPICS and EXTERNAL_MEDIA_MANAGER_API_ROUTE:
