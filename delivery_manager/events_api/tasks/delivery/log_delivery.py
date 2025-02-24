@@ -208,7 +208,7 @@ def create_delivery(self, event, **kwargs):
                 "event_type": "delivery on-going",
                 "event_description": msg,
                 "event_id": delivery_id,
-                "topic": topics.split(',')[0]
+                "topic": topics[0]
                 }
             
             if store_image:
