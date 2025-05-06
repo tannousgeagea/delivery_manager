@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import PlantInfo, EntityType, PlantEntity, DeliveryEvent, DeliveryState, Camera
 
 admin.site.site_header = "Delivery Manager"
@@ -7,7 +8,7 @@ admin.site.index_title = "Welcome to Delivery Manager Dashboard Portal"
 
 
 @admin.register(PlantInfo)
-class PlantInfoAdmin(admin.ModelAdmin):
+class PlantInfoAdmin(ModelAdmin):
     """
     Admin interface for the PlantInfo model.
     """
@@ -18,7 +19,7 @@ class PlantInfoAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)  # Make created_at field read-only
 
 @admin.register(EntityType)
-class EntityTypeAdmin(admin.ModelAdmin):
+class EntityTypeAdmin(ModelAdmin):
     """
     Admin interface for the EntityType model.
     """
@@ -29,7 +30,7 @@ class EntityTypeAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)  # Make created_at field read-only
 
 @admin.register(PlantEntity)
-class PlantEntityAdmin(admin.ModelAdmin):
+class PlantEntityAdmin(ModelAdmin):
     """
     Admin interface for the PlantEntity model.
     """
@@ -40,13 +41,13 @@ class PlantEntityAdmin(admin.ModelAdmin):
     readonly_fields = ('created_At',)  # Make created_At field read-only
 
 @admin.register(Camera)
-class CameraAdmin(admin.ModelAdmin):
+class CameraAdmin(ModelAdmin):
     list_display = ('camera_id', 'plant_entity', 'stream_topic', 'location')
     search_fields = ('camera_id', 'plant_entity__plant_name', 'stream_topic', 'location')
     list_filter = ('plant_entity',)
 
 @admin.register(DeliveryEvent)
-class DeliveryEventAdmin(admin.ModelAdmin):
+class DeliveryEventAdmin(ModelAdmin):
     """
     Admin interface for the DeliveryEvent model.
     """
@@ -57,7 +58,7 @@ class DeliveryEventAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)  # Make created_at field read-only
 
 @admin.register(DeliveryState)
-class DeliveryStateAdmin(admin.ModelAdmin):
+class DeliveryStateAdmin(ModelAdmin):
     """
     Admin interface for the DeliveryState model.
     """

@@ -65,6 +65,7 @@ RUN pip3 install celery
 RUN pip3 install flower
 RUN pip3 install requests
 RUN pip3 install psycopg2-binary
+RUN pip3 install django-unfold
 
 COPY django_cron_job /etc/cron.d/django_cron_job
 RUN chmod 0644 /etc/cron.d/django_cron_job
